@@ -45,11 +45,14 @@ jobs:
         with:
           name: NotesArch-Release-APK
           path: app/build/outputs/apk/release/*.apk
-        
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
+
+      - name: Install Bundler
+        run: gem install bundler
 
       - name: Install Fastlane dependencies
         run: bundle install
@@ -58,4 +61,3 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: bundle exec fastlane android distribute
-
