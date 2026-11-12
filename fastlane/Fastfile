@@ -1,0 +1,17 @@
+
+default_platform(:android)
+
+platform :android do
+  desc "Build and distribute NotesArch to Firebase"
+
+  lane :distribute do
+    firebase_app_distribution(
+      app: "1:617389639494:android:8b3a0605021e73871f8747",
+      service_credentials_json_data: ENV.fetch("FIREBASE_SERVICE_ACCOUNT"),
+      android_artifact_type: "APK",
+      android_artifact_path: "app/build/outputs/apk/release/app-release.apk",
+      groups: "qa-team",
+      release_notes: "Новая тестовая версия NotesArch"
+    )
+  end
+end
