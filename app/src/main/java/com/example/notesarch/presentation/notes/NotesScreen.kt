@@ -1,3 +1,4 @@
+
 package com.example.notesarch.presentation.notes
 
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.notesarch.data.RemoteConfigManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,42 +25,81 @@ fun NotesScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
 
+    val remoteConfig = remember { RemoteConfigManager() }
+    var welcomeMessage by remember {
+        mutableStateOf("Добро пожаловать в NotesArch!")
+    }
+
+    LaunchedEffect(Unit) {
+        try {
+            welcomeMessage = remoteConfig.getWelcomeMessage()
+        } catch (e: Exception) {
+            // Используем приветствие по умолчанию
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Заметки") },
                 actions = {
-                    TextButton(onClick = onLogout) { Text("Выйти") }
+                    TextButton(onClick = onLogout) {
+                        Text("Выйти")
+                    }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Добавить")
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Добавить"
+                )
             }
         }
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            if (state.isLoading) {
-                CircularProgressIndicator(Modifier.align(Alignment.Center))
-            } else if (state.notes.isEmpty()) {
-                Text(
-                    "Заметок пока нет. Нажмите + чтобы добавить.",
-                    Modifier.align(Alignment.Center)
-                )
-            } else {
-                LazyColumn(Modifier.fillMaxSize()) {
-                    items(state.notes, key = { it.id }) { note ->
-                        ListItem(
-                            headlineContent = { Text(note.title) },
-                            supportingContent = { Text(note.content) },
-                            trailingContent = {
-                                IconButton(onClick = { viewModel.onDeleteNote(note) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Удалить")
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
+            Text(
+                text = welcomeMessage,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        Modifier.align(Alignment.Center)
+                    )
+                } else if (state.notes.isEmpty()) {
+                    Text(
+                        "Заметок пока нет. Нажмите + чтобы добавить.",
+                        Modifier.align(Alignment.Center)
+                    )
+                } else {
+                    LazyColumn(Modifier.fillMaxSize()) {
+                        items(state.notes, key = { it.id }) { note ->
+                            ListItem(
+                                headlineContent = { Text(note.title) },
+                                supportingContent = { Text(note.content) },
+                                trailingContent = {
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onDeleteNote(note)
+                                        }
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Удалить"
+                                        )
+                                    }
                                 }
-                            }
-                        )
-                        HorizontalDivider()
+                            )
+                            HorizontalDivider()
+                        }
                     }
                 }
             }
@@ -76,7 +117,7 @@ fun NotesScreen(
 
         state.errorMessage?.let { msg ->
             LaunchedEffect(msg) {
-                // Покажем snackbar
+                // Здесь можно показать snackbar
             }
         }
     }
@@ -102,7 +143,9 @@ fun AddNoteDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
                 Spacer(Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = content,
                     onValueChange = { content = it },
@@ -112,10 +155,16 @@ fun AddNoteDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(title, content) }) { Text("Сохранить") }
+            TextButton(
+                onClick = { onConfirm(title, content) }
+            ) {
+                Text("Сохранить")
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Отмена") }
+            TextButton(onClick = onDismiss) {
+                Text("Отмена")
+            }
         }
     )
 }
