@@ -25,3 +25,5 @@ keystore-base64.txt
 my-upload-key.jks
 my-upload-key-old.jks
 app/keystore.jks
+
+app-release.aab
