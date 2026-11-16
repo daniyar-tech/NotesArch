@@ -24,3 +24,4 @@ gradle/gradle-daemon-jvm.properties
 keystore-base64.txt
 my-upload-key.jks
 my-upload-key-old.jks
+app/keystore.jks
