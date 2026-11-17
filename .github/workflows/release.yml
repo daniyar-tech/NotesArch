@@ -28,6 +28,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Prepare release notes
+        run: |
+          test -s fastlane/release_notes.txt
+          cp fastlane/release_notes.txt release-notes.txt
+
       - name: Restore keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
@@ -45,4 +50,11 @@ jobs:
         with:
           name: NotesArch-Release-AAB
           path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: NotesArch-Release-Notes
+          path: release-notes.txt
           if-no-files-found: error
