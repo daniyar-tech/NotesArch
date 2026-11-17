@@ -26,15 +26,28 @@ fun NotesScreen(
     var showDialog by remember { mutableStateOf(false) }
 
     val remoteConfig = remember { RemoteConfigManager() }
+
     var welcomeMessage by remember {
         mutableStateOf("Добро пожаловать в NotesArch!")
     }
 
+    var newFeatureEnabled by remember {
+        mutableStateOf(false)
+    }
+
+    var maintenanceMode by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         try {
+            remoteConfig.fetchConfig()
+
             welcomeMessage = remoteConfig.getWelcomeMessage()
+            newFeatureEnabled = remoteConfig.isNewFeatureEnabled()
+            maintenanceMode = remoteConfig.isMaintenanceModeEnabled()
         } catch (e: Exception) {
-            // Используем приветствие по умолчанию
+            // Используем значения по умолчанию
         }
     }
 
@@ -69,7 +82,45 @@ fun NotesScreen(
                 modifier = Modifier.padding(16.dp)
             )
 
-            Box(Modifier.weight(1f).fillMaxWidth()) {
+            if (maintenanceMode) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = "Внимание! Приложение находится на техническом обслуживании.",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+
+            if (newFeatureEnabled) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Text(
+                        text = "Новая функция доступна!",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
                         Modifier.align(Alignment.Center)
@@ -83,8 +134,12 @@ fun NotesScreen(
                     LazyColumn(Modifier.fillMaxSize()) {
                         items(state.notes, key = { it.id }) { note ->
                             ListItem(
-                                headlineContent = { Text(note.title) },
-                                supportingContent = { Text(note.content) },
+                                headlineContent = {
+                                    Text(note.title)
+                                },
+                                supportingContent = {
+                                    Text(note.content)
+                                },
                                 trailingContent = {
                                     IconButton(
                                         onClick = {
@@ -103,21 +158,21 @@ fun NotesScreen(
                     }
                 }
             }
-        }
 
-        if (showDialog) {
-            AddNoteDialog(
-                onDismiss = { showDialog = false },
-                onConfirm = { title, content ->
-                    viewModel.onAddNote(title, content)
-                    showDialog = false
+            if (showDialog) {
+                AddNoteDialog(
+                    onDismiss = { showDialog = false },
+                    onConfirm = { title, content ->
+                        viewModel.onAddNote(title, content)
+                        showDialog = false
+                    }
+                )
+            }
+
+            state.errorMessage?.let { msg ->
+                LaunchedEffect(msg) {
+                    // Здесь можно показать snackbar
                 }
-            )
-        }
-
-        state.errorMessage?.let { msg ->
-            LaunchedEffect(msg) {
-                // Здесь можно показать snackbar
             }
         }
     }
@@ -133,7 +188,9 @@ fun AddNoteDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Новая заметка") },
+        title = {
+            Text("Новая заметка")
+        },
         text = {
             Column {
                 OutlinedTextField(
@@ -156,7 +213,9 @@ fun AddNoteDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm(title, content) }
+                onClick = {
+                    onConfirm(title, content)
+                }
             ) {
                 Text("Сохранить")
             }
