@@ -1,3 +1,10 @@
+fun getCommitCount(): Int {
+    val output = providers.exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+    }.standardOutput.asText.get().trim()
+
+    return output.toInt()
+}
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -38,8 +45,8 @@ android {
         applicationId = "com.example.notesarch"
         minSdk = 24
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = getCommitCount()
+        versionName = "2.1.${getCommitCount()}"
     }
 
     buildFeatures {
